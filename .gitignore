@@ -14,8 +14,10 @@ charts/
 # Claude
 CLAUDE.md
 
-# Docs (Docusaurus)
+# Docs (Astro)
 docs/node_modules/
-docs/build/
-docs/.docusaurus/
-docs/.cache-loader/
+docs/dist/
+docs/.astro/
+docs/npm-debug.log*
+docs/.env
+docs/.env.production

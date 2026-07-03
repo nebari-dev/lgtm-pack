@@ -182,6 +182,32 @@ This is a soft dependency on the LGTM pack: if this pack (and therefore Grafana)
 
 To stop watching other namespaces, set `grafana.sidecar.dashboards.searchNamespace` to the release namespace (or a comma-separated list). Only this pack's own dashboards are then provisioned.
 
+## Documentation
+
+The docs site lives in `docs/` and is built with [Astro](https://astro.build) + [Starlight](https://starlight.astro.build). It deploys automatically to [packs.nebari.dev/lgtm-pack/](https://packs.nebari.dev/lgtm-pack/) on every merge to `main`. Pull requests get a preview URL posted as a PR comment.
+
+### Running locally
+
+```bash
+make docs           # start dev server at http://localhost:4321
+make docs-build     # build to docs/dist/
+make docs-preview   # serve the production build locally
+make docs-test      # run unit tests
+```
+
+### Adding or editing content
+
+Content lives in `docs/src/content/docs/`. Each `.md` or `.mdx` file becomes a page. The sidebar is configured in `docs/astro.config.mjs` under `starlight.sidebar`.
+
+### Updating nebari design tokens
+
+`docs/src/styles/nebari-tokens.css` is copied from the [nebari-design](https://github.com/nebari-dev/nebari-design) repository. To update the primitive color ramps, fetch the latest from the reference pack:
+
+```bash
+gh api "repos/nebari-dev/llm-serving-pack/contents/docs/src/styles/nebari-tokens.css?ref=main" \
+  --jq '.content' | base64 -d > docs/src/styles/nebari-tokens.css
+```
+
 ## License
 
 Apache 2.0 — see [LICENSE](LICENSE).

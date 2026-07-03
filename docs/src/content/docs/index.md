@@ -1,10 +1,6 @@
 ---
 title: Introduction
-description: Documentation for the Nebari LGTM Pack, an observability stack for Nebari.
-slug: /
-sidebar_position: 1
-last_update:
-  date: 2026-06-18
+description: Documentation for the Nebari LGTM Pack, an observability stack (Grafana LGTM) for Nebari.
 ---
 
 # Nebari LGTM Pack

@@ -1,26 +1,29 @@
 # Nebari LGTM Pack Documentation
 
-This directory contains the [Docusaurus](https://docusaurus.io/) site for the Nebari LGTM Pack. The site is written in TypeScript.
+This directory contains the [Astro](https://astro.build) + [Starlight](https://starlight.astro.build) site for the Nebari LGTM Pack.
 
 ## Prerequisites
 
-- Node.js `>= 20` (enforced by the `engines` field in `package.json`).
-- npm (bundled with Node.js).
+- Node.js `>= 22` (enforced by the `engines` field in `package.json`)
+- npm (bundled with Node.js)
 
 ## Install
 
 ```bash
-cd docs
-npm install
+npm ci
 ```
+
+Or from the repo root: `make docs-install`
 
 ## Local development
 
 ```bash
-npm start
+npm run dev
 ```
 
-Starts the Docusaurus dev server with hot reload on http://localhost:3000/.
+Starts the Astro dev server with hot reload on http://localhost:4321/.
+
+Or from the repo root: `make docs`
 
 ## Production build
 
@@ -28,22 +31,38 @@ Starts the Docusaurus dev server with hot reload on http://localhost:3000/.
 npm run build
 ```
 
-Emits static files to `docs/build/`. The search index is generated as part of the production build.
+Emits static files to `docs/dist/`.
+
+Or from the repo root: `make docs-build`
 
 ## Preview the production build
 
 ```bash
-npm run serve
+npm run preview
 ```
 
-Serves the contents of `docs/build/` locally so you can verify the production output, including search.
+Or from the repo root: `make docs-preview`
 
-## Type checking
+## Unit tests
 
 ```bash
-npm run typecheck
+npm test
 ```
+
+Or from the repo root: `make docs-test`
+
+## Link checking
+
+```bash
+make docs-check-links
+```
+
+To test with the production base path: `BASE=/lgtm-pack/ make docs-check-links`
+
+## Content
+
+Pages live in `src/content/docs/`. Each `.md` or `.mdx` file becomes a page. The sidebar is configured in `astro.config.mjs` under `starlight.sidebar`.
 
 ## CI
 
-The [`Deploy docs to GitHub Pages` workflow](../.github/workflows/deploy-docs.yml) builds the site for every pull request and push to `main`.
+The [`docs` workflow](../.github/workflows/docs.yml) builds the site and deploys to [Cloudflare Pages](https://pages.cloudflare.com) on every push to `main`. Pull requests get a preview URL posted as a comment.
