@@ -42,6 +42,8 @@ assert_contains DEFAULT_OUT 'compactor_blocks_retention_period: 30d' \
   "monolithic config must bound retention (issue #22)"
 assert_contains DEFAULT_OUT 'checksum/config' \
   "monolithic StatefulSet must roll on config changes"
+assert_contains DEFAULT_OUT 'rule_path: /data/ruler' \
+  "monolithic ruler workdir must be on the data volume (startup crash otherwise)"
 assert_not_contains DIST_OUT 'serviceName: test-mimir$' \
   "distributed mode must not render the monolithic StatefulSet"
 

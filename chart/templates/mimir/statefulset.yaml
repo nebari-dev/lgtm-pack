@@ -27,10 +27,17 @@ spec:
         runAsGroup: 10001
         runAsNonRoot: true
         runAsUser: 10001
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: mimir
           image: "{{ .Values.mimir.image.repository }}:{{ .Values.mimir.image.tag }}"
           imagePullPolicy: IfNotPresent
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
           args:
             - -target=all
             - -config.file=/etc/mimir/mimir.yaml

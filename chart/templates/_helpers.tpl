@@ -132,6 +132,12 @@ ruler_storage:
   filesystem:
     dir: /data/rules
 
+# The ruler is part of -target=all. Its working directory defaults to
+# ./data-ruler/, which is unwritable for the non-root user on a read-only
+# root filesystem — Mimir 3.0.1 hard-fails at startup without this.
+ruler:
+  rule_path: /data/ruler
+
 # Default filepath (./metrics-activity.log) is not writable by the non-root
 # container user; keep it on the data volume.
 activity_tracker:

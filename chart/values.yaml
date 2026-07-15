@@ -302,9 +302,8 @@ mimir:
 # Ref: https://github.com/grafana/helm-charts/tree/main/charts/mimir-distributed
 mimir-distributed:
   # Opt-in distributed Mimir. Default is OFF: the chart deploys monolithic
-  # single-binary Mimir instead (see the `mimir` block above once Task 2 adds
-  # it). Flip to true for a horizontally scalable topology backed by a shared
-  # object store.
+  # single-binary Mimir instead (see the `mimir` block above). Flip to true
+  # for a horizontally scalable topology backed by a shared object store.
   enabled: false
   # Lightweight config for local development — single replicas, no Kafka
   mimir:
