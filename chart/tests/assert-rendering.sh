@@ -47,4 +47,14 @@ assert_contains DEFAULT_OUT 'rule_path: /data/ruler' \
 assert_not_contains DIST_OUT 'serviceName: test-mimir$' \
   "distributed mode must not render the monolithic StatefulSet"
 
+# --- Distributed mode: shared object store, no filesystem "buckets" ---
+assert_contains DIST_OUT 'name: test-minio' \
+  "distributed mode must deploy the bundled MinIO"
+assert_contains DIST_OUT 'bucket_name: mimir-tsdb' \
+  "distributed blocks storage must point at the MinIO bucket"
+assert_not_contains DIST_OUT 'dir: /data/mimir-blocks' \
+  "distributed mode must not use filesystem blocks storage (issue #22)"
+assert_contains DIST_OUT 'compactor_blocks_retention_period: 30d' \
+  "distributed config must bound retention (issue #22)"
+
 echo "All rendering assertions passed."
