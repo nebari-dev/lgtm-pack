@@ -278,6 +278,10 @@ tempo:
 # scale, enable the mimir-distributed subchart below instead (this block is
 # then ignored).
 mimir:
+  # Disabling BOTH this and mimir-distributed removes the Grafana Mimir
+  # datasource, but the OTel collector override still routes its metrics
+  # pipeline to the (now nonexistent) Mimir service — disable
+  # otelCollectorOverrides or bring your own metrics backend in that case.
   enabled: true
   image:
     repository: grafana/mimir
