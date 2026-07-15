@@ -923,8 +923,12 @@ In the final `Dump logs on failure` step, after the `=== Mimir logs ===` lines, 
           echo "=== Mimir (monolithic) logs ==="
           kubectl logs -l app.kubernetes.io/component=mimir --tail=100 2>/dev/null || true
           echo "=== MinIO logs ==="
-          kubectl logs -l app.kubernetes.io/name=minio --tail=50 2>/dev/null || true
+          kubectl logs -l app=minio,release=lgtm-pack --tail=50 2>/dev/null || true
 ```
+
+(The bundled MinIO chart 5.4.0 uses legacy labels `app: minio` /
+`release: <release>` — it has no `app.kubernetes.io/name` label, so the
+modern selector would match nothing.)
 
 - [ ] **Step 5.7: Validate workflow syntax locally**
 
