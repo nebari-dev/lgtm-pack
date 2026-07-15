@@ -14,15 +14,15 @@ A Helm chart for deploying the Grafana LGTM observability stack on Kubernetes wi
 ## Architecture
 
 ```
-┌─────────────────────────────────────────────┐
-│                  Grafana UI                  │
-│            (port 3000 / svc :80)            │
-│                                              │
-│  Datasources:                                │
-│    ├── Loki   → http://lgtm-pack-loki:3100  │
-│    ├── Tempo  → http://lgtm-pack-tempo:3100 │
-│    └── Mimir  → http://lgtm-pack-mimir:8080 │
-└─────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────┐
+│                       Grafana UI                        │
+│                  (port 3000 / svc :80)                  │
+│                                                         │
+│  Datasources:                                           │
+│    ├── Loki   → http://lgtm-pack-loki:3100              │
+│    ├── Tempo  → http://lgtm-pack-tempo:3200             │
+│    └── Mimir  → http://lgtm-pack-mimir:8080/prometheus  │
+└─────────────────────────────────────────────────────────┘
 
 Push endpoints (for external ingest):
   ├── Loki   :3100  /loki/api/v1/push
@@ -96,7 +96,7 @@ Mimir runs **monolithic** by default: a single-binary StatefulSet (`-target=all`
 For horizontal scale, switch to the **distributed** topology:
 
 ```bash
-helm install lgtm-pack chart --set mimir-distributed.enabled=true
+helm install lgtm-pack chart --set mimir-distributed.enabled=true --set nebariapp.enabled=false
 ```
 
 Distributed mode deploys the upstream `mimir-distributed` subchart backed by a shared object store — bundled MinIO by default (dev-grade credentials; override for production), or a real cloud bucket (see the commented example under `mimir-distributed` in `chart/values.yaml`). Filesystem storage is never used in distributed mode: with per-component PVCs the compactor and store-gateway can't see the ingester's blocks, retention never runs, and the ingester disk fills until ingestion halts ([issue #22](https://github.com/nebari-dev/lgtm-pack/issues/22)).
