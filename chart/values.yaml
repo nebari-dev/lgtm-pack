@@ -302,7 +302,7 @@ mimir:
   extraConfig: {}
 
 # =============================================================================
-# Mimir — Metrics (Prometheus-compatible)
+# Mimir — Metrics (distributed, opt-in)
 # =============================================================================
 # All values under this key are passed to the mimir-distributed subchart.
 # Ref: https://github.com/grafana/helm-charts/tree/main/charts/mimir-distributed
