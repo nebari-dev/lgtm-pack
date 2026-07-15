@@ -222,7 +222,7 @@ jobs:
           sleep 5
           RESP=$(curl -sS 'http://localhost:9009/prometheus/api/v1/query?query=ci_test_metric')
           echo "$RESP"
-          echo "$RESP" | grep -q 'ci_test_metric'
+          echo "$RESP" | grep -q '"__name__":"ci_test_metric"'
           RESULT=$?
           kill $PF_PID 2>/dev/null || true
           exit $RESULT
@@ -259,7 +259,7 @@ jobs:
           echo "=== Mimir (monolithic) logs ==="
           kubectl logs -l app.kubernetes.io/component=mimir --tail=100 2>/dev/null || true
           echo "=== MinIO logs ==="
-          kubectl logs -l app.kubernetes.io/name=minio --tail=50 2>/dev/null || true
+          kubectl logs -l app=minio,release=lgtm-pack --tail=50 2>/dev/null || true
           echo "=== All pods ==="
           kubectl get pods -o wide
           echo "=== Events ==="
