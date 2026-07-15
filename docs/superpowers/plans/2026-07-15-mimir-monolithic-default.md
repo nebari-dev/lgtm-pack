@@ -168,6 +168,8 @@ assert_contains DEFAULT_OUT 'compactor_blocks_retention_period: 30d' \
   "monolithic config must bound retention (issue #22)"
 assert_contains DEFAULT_OUT 'checksum/config' \
   "monolithic StatefulSet must roll on config changes"
+assert_contains DEFAULT_OUT 'rule_path: /data/ruler' \
+  "monolithic ruler workdir must be on the data volume (startup crash otherwise)"
 assert_not_contains DIST_OUT 'serviceName: test-mimir$' \
   "distributed mode must not render the monolithic StatefulSet"
 ```
@@ -280,6 +282,12 @@ ruler_storage:
   filesystem:
     dir: /data/rules
 
+# The ruler is part of -target=all. Its working directory defaults to
+# ./data-ruler/, which is unwritable for the non-root user on a read-only
+# root filesystem — Mimir 3.0.1 hard-fails at startup without this.
+ruler:
+  rule_path: /data/ruler
+
 # Default filepath (./metrics-activity.log) is not writable by the non-root
 # container user; keep it on the data volume.
 activity_tracker:
@@ -350,10 +358,17 @@ spec:
         runAsGroup: 10001
         runAsNonRoot: true
         runAsUser: 10001
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: mimir
           image: "{{ .Values.mimir.image.repository }}:{{ .Values.mimir.image.tag }}"
           imagePullPolicy: IfNotPresent
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
           args:
             - -target=all
             - -config.file=/etc/mimir/mimir.yaml
