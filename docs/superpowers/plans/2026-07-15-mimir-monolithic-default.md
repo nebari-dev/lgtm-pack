@@ -1004,8 +1004,11 @@ backend is valid.
 For horizontal scale, switch to the **distributed** topology:
 
 ```bash
-helm install lgtm-pack chart --set mimir-distributed.enabled=true
+helm install lgtm-pack chart --set mimir-distributed.enabled=true --set nebariapp.enabled=false
 ```
+
+(`nebariapp.enabled` defaults to true and hard-requires `nebariapp.hostname`,
+so the one-liner must disable it just like the Quick Start command.)
 
 Distributed mode deploys the upstream `mimir-distributed` subchart backed by a
 shared object store — bundled MinIO by default, or a real cloud bucket (see
@@ -1030,6 +1033,11 @@ In `CLAUDE.md` (gitignored):
 - [ ] **Step 6.4: Bump chart version**
 
 In `chart/Chart.yaml`, change `version: 0.1.4` to `version: 0.2.0`.
+
+Also regenerate and COMMIT `chart/Chart.lock` (`helm dependency update chart`):
+adding the `condition:` field in Task 1 changed the dependencies digest, so the
+old committed lock fails `helm dependency build chart` with "the lock file is
+out of sync with the dependencies file".
 
 - [ ] **Step 6.5: Final verification**
 
