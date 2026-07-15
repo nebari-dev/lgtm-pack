@@ -57,4 +57,22 @@ assert_not_contains DIST_OUT 'dir: /data/mimir-blocks' \
 assert_contains DIST_OUT 'compactor_blocks_retention_period: 30d' \
   "distributed config must bound retention (issue #22)"
 
+# --- Mode-aware endpoints ---
+assert_contains DEFAULT_OUT 'url: http://test-mimir:8080/prometheus' \
+  "default datasource must point at the monolithic Mimir service"
+assert_contains DEFAULT_OUT 'endpoint: http://test-mimir.default.svc.cluster.local:8080/otlp' \
+  "default OTel exporter must point at the monolithic Mimir service"
+assert_not_contains DEFAULT_OUT 'test-mimir-gateway' \
+  "default mode must not reference the distributed gateway anywhere"
+assert_contains DIST_OUT 'url: http://test-mimir-gateway:80/prometheus' \
+  "distributed datasource must point at the mimir gateway"
+assert_contains DIST_OUT 'endpoint: http://test-mimir-gateway.default.svc.cluster.local:80/otlp' \
+  "distributed OTel exporter must point at the mimir gateway"
+
+echo "== rendering with all Mimir disabled =="
+NO_MIMIR_OUT="$(helm template test "$CHART" --namespace default --set nebariapp.enabled=false \
+  --set mimir.enabled=false)"
+assert_not_contains NO_MIMIR_OUT 'name: Mimir' \
+  "with no Mimir enabled, the Grafana Mimir datasource must be omitted"
+
 echo "All rendering assertions passed."

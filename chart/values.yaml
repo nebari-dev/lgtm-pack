@@ -83,8 +83,10 @@ nebariapp:
   #           pathType: Prefix
   #   - name: mimir-push
   #     service:
-  #       name: <release>-mimir-distributed-nginx
-  #       port: 80
+  #       # monolithic: <release>-mimir port 8080
+  #       # distributed: <release>-mimir-gateway port 80
+  #       name: <release>-mimir
+  #       port: 8080
   #     routing:
   #       routes:
   #         - pathPrefix: /mimir

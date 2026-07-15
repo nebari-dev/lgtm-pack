@@ -147,3 +147,28 @@ limits:
   # Bound disk usage — unset means keep blocks forever (issue #22).
   compactor_blocks_retention_period: {{ .Values.mimir.retention }}
 {{- end }}
+
+{{/*
+Mimir service host and port — switch between the chart's monolithic Service
+and the mimir-distributed gateway based on which mode is enabled. Consumers
+build URLs as http://<host>:<port>/... (Grafana datasource, OTel exporter).
+*/}}
+{{- define "nebari-lgtm-pack.mimir-host" -}}
+{{- if index .Values "mimir-distributed" "enabled" -}}
+{{- .Release.Name }}-mimir-gateway
+{{- else -}}
+{{- .Release.Name }}-mimir
+{{- end -}}
+{{- end }}
+
+{{- define "nebari-lgtm-pack.mimir-port" -}}
+{{- if index .Values "mimir-distributed" "enabled" -}}80{{- else -}}8080{{- end -}}
+{{- end }}
+
+{{/*
+Truthy when any Mimir (monolithic or distributed) is part of this install;
+empty string otherwise, so it can be used directly in `if` conditions.
+*/}}
+{{- define "nebari-lgtm-pack.mimir-enabled" -}}
+{{- if or .Values.mimir.enabled (index .Values "mimir-distributed" "enabled") -}}true{{- end -}}
+{{- end }}
