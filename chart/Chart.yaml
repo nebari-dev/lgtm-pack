@@ -18,6 +18,7 @@ dependencies:
   - name: mimir-distributed
     version: 6.0.5
     repository: https://grafana.github.io/helm-charts
+    condition: mimir-distributed.enabled
   - name: promtail
     version: 6.17.1
     repository: https://grafana.github.io/helm-charts

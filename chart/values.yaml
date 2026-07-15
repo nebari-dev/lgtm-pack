@@ -272,7 +272,12 @@ tempo:
 # All values under this key are passed to the mimir-distributed subchart.
 # Ref: https://github.com/grafana/helm-charts/tree/main/charts/mimir-distributed
 mimir-distributed:
-  # Lightweight config for local development — single replicas, no Kafka, filesystem storage
+  # Opt-in distributed Mimir. Default is OFF: the chart deploys monolithic
+  # single-binary Mimir instead (see the `mimir` block above once Task 2 adds
+  # it). Flip to true for a horizontally scalable topology backed by a shared
+  # object store.
+  enabled: false
+  # Lightweight config for local development — single replicas, no Kafka
   mimir:
     structuredConfig:
       multitenancy_enabled: false
