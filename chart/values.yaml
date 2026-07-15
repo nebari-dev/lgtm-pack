@@ -311,10 +311,21 @@ mimir-distributed:
   # its own PVC, so compaction/retention never run and the ingester disk
   # grows until ingestion halts (issue #22).
   #
+  # The bundled MinIO uses the upstream chart's dev-grade defaults (static
+  # credentials rendered into the Mimir config ConfigMap, 5Gi PVC). For
+  # production, use the cloud-bucket example below, or at minimum override
+  # minio.rootUser, minio.rootPassword, and minio.persistence.size.
+  #
   # To use a real cloud bucket instead, disable minio and supply the s3
-  # config, e.g.:
+  # config. The ${...} placeholders are expanded from the container
+  # environment (the subchart runs Mimir with -config.expand-env), so the
+  # credentials must be injected via global.extraEnvFrom, e.g.:
   # minio:
   #   enabled: false
+  # global:
+  #   extraEnvFrom:
+  #     - secretRef:
+  #         name: mimir-s3-credentials  # AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY
   # mimir:
   #   structuredConfig:
   #     common:
