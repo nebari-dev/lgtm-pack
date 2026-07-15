@@ -267,6 +267,35 @@ tempo:
     size: 10Gi
 
 # =============================================================================
+# Mimir — Metrics (monolithic single-binary, the default)
+# =============================================================================
+# Rendered by this chart's own templates (templates/mimir/) using the upstream
+# grafana/mimir image — the mimir-distributed subchart has no monolithic mode.
+# All Mimir components run in one process sharing one PVC, which is the only
+# topology where Mimir's filesystem storage backend is valid. For horizontal
+# scale, enable the mimir-distributed subchart below instead (this block is
+# then ignored).
+mimir:
+  enabled: true
+  image:
+    repository: grafana/mimir
+    # Kept in lockstep with the mimir-distributed subchart's appVersion so
+    # both modes run the same Mimir release.
+    tag: "3.0.1"
+  # How long the compactor keeps blocks before deleting them. Unset would mean
+  # keep-forever and unbounded disk growth (issue #22).
+  retention: 30d
+  persistence:
+    size: 20Gi
+  resources: {}
+  # Deep-merged over the rendered Mimir config (templates/mimir/configmap.yaml)
+  # for advanced tuning, e.g.:
+  # extraConfig:
+  #   limits:
+  #     ingestion_rate: 100000
+  extraConfig: {}
+
+# =============================================================================
 # Mimir — Metrics (Prometheus-compatible)
 # =============================================================================
 # All values under this key are passed to the mimir-distributed subchart.

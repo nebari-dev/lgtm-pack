@@ -33,4 +33,16 @@ assert_contains DIST_OUT 'name: test-mimir-ingester' \
 assert_contains DIST_OUT 'name: test-mimir-gateway' \
   "distributed mode must render the mimir gateway"
 
+# --- Monolithic Mimir (default) ---
+assert_contains DEFAULT_OUT 'serviceName: test-mimir$' \
+  "default mode must render the monolithic Mimir StatefulSet"
+assert_contains DEFAULT_OUT 'name: test-mimir-config' \
+  "default mode must render the monolithic Mimir ConfigMap"
+assert_contains DEFAULT_OUT 'compactor_blocks_retention_period: 30d' \
+  "monolithic config must bound retention (issue #22)"
+assert_contains DEFAULT_OUT 'checksum/config' \
+  "monolithic StatefulSet must roll on config changes"
+assert_not_contains DIST_OUT 'serviceName: test-mimir$' \
+  "distributed mode must not render the monolithic StatefulSet"
+
 echo "All rendering assertions passed."
