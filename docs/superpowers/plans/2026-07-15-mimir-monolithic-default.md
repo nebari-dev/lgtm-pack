@@ -160,17 +160,23 @@ In `chart/tests/assert-rendering.sh`, insert before the final `echo "All renderi
 
 ```bash
 # --- Monolithic Mimir (default) ---
-assert_contains DEFAULT_OUT '-target=all' \
-  "default mode must run single-binary Mimir (-target=all)"
+assert_contains DEFAULT_OUT 'serviceName: test-mimir$' \
+  "default mode must render the monolithic Mimir StatefulSet"
 assert_contains DEFAULT_OUT 'name: test-mimir-config' \
   "default mode must render the monolithic Mimir ConfigMap"
 assert_contains DEFAULT_OUT 'compactor_blocks_retention_period: 30d' \
   "monolithic config must bound retention (issue #22)"
 assert_contains DEFAULT_OUT 'checksum/config' \
   "monolithic StatefulSet must roll on config changes"
-assert_not_contains DIST_OUT '-target=all' \
+assert_not_contains DIST_OUT 'serviceName: test-mimir$' \
   "distributed mode must not render the monolithic StatefulSet"
 ```
+
+(`-target=all` was the original pattern but cannot discriminate: Loki's
+single-binary container also renders it in every mode. `serviceName:
+test-mimir` with an end-of-line anchor matches only the monolithic
+StatefulSet; distributed StatefulSets render suffixed names like
+`test-mimir-ingester-headless`.)
 
 - [ ] **Step 2.2: Run to verify it fails**
 
