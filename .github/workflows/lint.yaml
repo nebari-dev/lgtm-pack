@@ -20,8 +20,11 @@ jobs:
       - name: Update dependencies
         run: helm dependency update chart
 
-      - name: Lint chart
+      - name: Lint chart (monolithic default)
         run: helm lint chart --set nebariapp.enabled=false
 
-      - name: Template chart
-        run: helm template test chart --set nebariapp.enabled=false > /dev/null
+      - name: Lint chart (distributed mode)
+        run: helm lint chart --set nebariapp.enabled=false --set mimir-distributed.enabled=true
+
+      - name: Template rendering assertions (both modes)
+        run: bash chart/tests/assert-rendering.sh
