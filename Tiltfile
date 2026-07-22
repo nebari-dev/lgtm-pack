@@ -45,41 +45,6 @@ k8s_resource(
 )
 
 k8s_resource(
-    workload='lgtm-pack-mimir-gateway',
-    labels=['mimir'],
-)
-
-k8s_resource(
-    workload='lgtm-pack-mimir-distributor',
-    labels=['mimir'],
-)
-
-k8s_resource(
-    workload='lgtm-pack-mimir-ingester',
-    labels=['mimir'],
-)
-
-k8s_resource(
-    workload='lgtm-pack-mimir-querier',
-    labels=['mimir'],
-)
-
-k8s_resource(
-    workload='lgtm-pack-mimir-query-frontend',
-    labels=['mimir'],
-)
-
-k8s_resource(
-    workload='lgtm-pack-mimir-compactor',
-    labels=['mimir'],
-)
-
-k8s_resource(
-    workload='lgtm-pack-mimir-store-gateway',
-    labels=['mimir'],
-)
-
-k8s_resource(
-    workload='lgtm-pack-mimir-query-scheduler',
+    workload='lgtm-pack-mimir',
     labels=['mimir'],
 )

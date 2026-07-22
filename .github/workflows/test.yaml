@@ -8,8 +8,13 @@ on:
 
 jobs:
   test:
+    name: test (${{ matrix.mimir-mode }} mimir)
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        mimir-mode: [monolithic, distributed]
 
     steps:
       - name: Checkout
@@ -64,6 +69,7 @@ jobs:
             --set grafana.envFromConfigMaps=null \
             --set grafana.envValueFrom=null \
             --set otelCollectorOverrides.enabled=true \
+            --set mimir-distributed.enabled=${{ matrix.mimir-mode == 'distributed' }} \
             --timeout 10m
 
       - name: Verify override ConfigMap rendered with correct content
@@ -78,7 +84,11 @@ jobs:
           # "lgtm-pack" and namespace "default" (helm install --namespace default)
           grep -q 'http://lgtm-pack-loki.default.svc.cluster.local:3100/otlp' /tmp/overrides.yaml
           grep -q 'http://lgtm-pack-tempo.default.svc.cluster.local:4317' /tmp/overrides.yaml
-          grep -q 'http://lgtm-pack-mimir-gateway.default.svc.cluster.local/otlp' /tmp/overrides.yaml
+          if [ "${{ matrix.mimir-mode }}" = "distributed" ]; then
+            grep -q 'http://lgtm-pack-mimir-gateway.default.svc.cluster.local:80/otlp' /tmp/overrides.yaml
+          else
+            grep -q 'http://lgtm-pack-mimir.default.svc.cluster.local:8080/otlp' /tmp/overrides.yaml
+          fi
 
           # Each pipeline routes ONLY to its respective backend exporter
           # (no debug). Parse with yq so we check the actual list contents.
@@ -160,6 +170,63 @@ jobs:
           kill $PF_PID 2>/dev/null || true
           exit $RESULT
 
+      - name: Wait for Mimir
+        run: |
+          if [ "${{ matrix.mimir-mode }}" = "distributed" ]; then
+            SELECTOR="app.kubernetes.io/name=mimir"
+          else
+            SELECTOR="app.kubernetes.io/component=mimir"
+          fi
+          for i in {1..60}; do
+            echo "=== Attempt $i/60 ==="
+            kubectl get pods -l "$SELECTOR"
+            if kubectl wait --for=condition=ready pod -l "$SELECTOR" --timeout=5s 2>/dev/null; then
+              echo "Mimir pods ready!"
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "Timeout waiting for Mimir"
+          exit 1
+
+      - name: Verify distributed mode uses shared object storage
+        if: matrix.mimir-mode == 'distributed'
+        run: |
+          set -e
+          kubectl get configmap lgtm-pack-mimir-config \
+            -o jsonpath='{.data.mimir\.yaml}' > /tmp/mimir-config.yaml
+          grep -q 'backend: s3' /tmp/mimir-config.yaml
+          if grep -q 'backend: filesystem' /tmp/mimir-config.yaml; then
+            echo "FAIL: filesystem storage backend in distributed mode (issue #22 regression)"
+            exit 1
+          fi
+          echo "Blocks storage correctly backed by s3 (MinIO)."
+
+      - name: Test Mimir OTLP push and Prometheus query
+        run: |
+          if [ "${{ matrix.mimir-mode }}" = "distributed" ]; then
+            SVC=lgtm-pack-mimir-gateway; PORT=80
+          else
+            SVC=lgtm-pack-mimir; PORT=8080
+          fi
+          kubectl port-forward svc/$SVC 9009:$PORT &
+          PF_PID=$!
+          sleep 5
+          NOW="$(date +%s)000000000"
+          echo "=== Pushing test metric via OTLP/HTTP JSON ==="
+          curl -sS -f -X POST http://localhost:9009/otlp/v1/metrics \
+            -H "Content-Type: application/json" \
+            -d '{"resourceMetrics":[{"resource":{"attributes":[{"key":"service.name","value":{"stringValue":"ci-test"}}]},"scopeMetrics":[{"metrics":[{"name":"ci_test_metric","gauge":{"dataPoints":[{"asDouble":42,"timeUnixNano":"'"$NOW"'"}]}}]}]}]}'
+          echo ""
+          echo "=== Querying it back via the Prometheus API ==="
+          sleep 5
+          RESP=$(curl -sS 'http://localhost:9009/prometheus/api/v1/query?query=ci_test_metric')
+          echo "$RESP"
+          echo "$RESP" | grep -q '"__name__":"ci_test_metric"'
+          RESULT=$?
+          kill $PF_PID 2>/dev/null || true
+          exit $RESULT
+
       - name: Test Loki log push and query
         run: |
           kubectl port-forward svc/lgtm-pack-loki 3100:3100 &
@@ -189,6 +256,10 @@ jobs:
           kubectl logs -l app.kubernetes.io/name=tempo --tail=100 2>/dev/null || true
           echo "=== Mimir logs ==="
           kubectl logs -l app.kubernetes.io/name=mimir --tail=100 2>/dev/null || true
+          echo "=== Mimir (monolithic) logs ==="
+          kubectl logs -l app.kubernetes.io/component=mimir --tail=100 2>/dev/null || true
+          echo "=== MinIO logs ==="
+          kubectl logs -l app=minio,release=lgtm-pack --tail=50 2>/dev/null || true
           echo "=== All pods ==="
           kubectl get pods -o wide
           echo "=== Events ==="

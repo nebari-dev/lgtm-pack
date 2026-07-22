@@ -9,25 +9,25 @@ A Helm chart for deploying the Grafana LGTM observability stack on Kubernetes wi
 | **Grafana** | Dashboards & visualization | Single replica |
 | **Loki** | Log aggregation | SingleBinary |
 | **Tempo** | Distributed tracing | Single replica |
-| **Mimir** | Metrics (Prometheus-compatible) | Monolithic |
+| **Mimir** | Metrics (Prometheus-compatible) | Monolithic (single-binary) |
 
 ## Architecture
 
 ```
-┌─────────────────────────────────────────────┐
-│                  Grafana UI                  │
-│            (port 3000 / svc :80)            │
-│                                              │
-│  Datasources:                                │
-│    ├── Loki   → http://lgtm-pack-loki:3100  │
-│    ├── Tempo  → http://lgtm-pack-tempo:3100 │
-│    └── Mimir  → http://lgtm-pack-mimir-..   │
-└─────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────┐
+│                       Grafana UI                        │
+│                  (port 3000 / svc :80)                  │
+│                                                         │
+│  Datasources:                                           │
+│    ├── Loki   → http://lgtm-pack-loki:3100              │
+│    ├── Tempo  → http://lgtm-pack-tempo:3200             │
+│    └── Mimir  → http://lgtm-pack-mimir:8080/prometheus  │
+└─────────────────────────────────────────────────────────┘
 
 Push endpoints (for external ingest):
   ├── Loki   :3100  /loki/api/v1/push
   ├── Tempo  :4317  (gRPC) / :4318 (HTTP)
-  └── Mimir  :80    /api/v1/push (Prometheus remote-write)
+  └── Mimir  :8080  /api/v1/push (Prometheus remote-write)
 ```
 
 ## Quick Start
@@ -58,10 +58,10 @@ Grafana will be available at port 80 of the `lgtm-pack-grafana` service (default
 
 ### Deploy as an ArgoCD Application
 
-On a GitOps-managed Nebari cluster, deploy the pack by applying an ArgoCD `Application` that sources the chart from the Nebari Helm repository. A complete, ready-to-edit manifest lives at [`examples/argocd-application.yaml`](examples/argocd-application.yaml):
+On a GitOps-managed Nebari cluster, deploy the pack by applying an ArgoCD `Application` that sources the chart from the Nebari Helm repository. Two complete, ready-to-edit manifests live at [`examples/argocd-application.yaml`](examples/argocd-application.yaml) — one for the default monolithic Mimir and one for the opt-in distributed mode. Copy the one you want into its own file (they are alternatives for the same release; applying the whole file would deploy only the last document) and apply it:
 
 ```bash
-kubectl apply -f examples/argocd-application.yaml
+kubectl apply -f my-lgtm-application.yaml
 ```
 
 Set `nebariapp.hostname` and `nebariapp.keycloakHostname` to your cluster's values before applying. The example pins `targetRevision` to a published chart version and opts the `monitoring` namespace into Nebari management (`nebari.dev/managed: "true"`) so the nebari-operator reconciles the bundled `NebariApp`.
@@ -86,7 +86,22 @@ All values under subchart keys pass through to the upstream charts:
 | `grafana.*` | grafana | [values](https://github.com/grafana/helm-charts/tree/main/charts/grafana) |
 | `loki.*` | loki | [values](https://github.com/grafana/helm-charts/tree/main/charts/loki) |
 | `tempo.*` | tempo | [values](https://github.com/grafana/helm-charts/tree/main/charts/tempo) |
+| `mimir.*` | (this chart) | Monolithic Mimir — see [`chart/values.yaml`](chart/values.yaml) |
 | `mimir-distributed.*` | mimir-distributed | [values](https://github.com/grafana/helm-charts/tree/main/charts/mimir-distributed) |
+
+### Mimir deployment modes
+
+Mimir runs **monolithic** by default: a single-binary StatefulSet (`-target=all`) with filesystem storage on one PVC and compactor retention bounded at 30 days (`mimir.retention`). This is the only topology where Mimir's filesystem storage backend is valid.
+
+For horizontal scale, switch to the **distributed** topology:
+
+```bash
+helm install lgtm-pack chart --set mimir-distributed.enabled=true --set nebariapp.enabled=false
+```
+
+Distributed mode deploys the upstream `mimir-distributed` subchart backed by a shared object store — bundled MinIO by default (dev-grade credentials; override for production), or a real cloud bucket (see the commented example under `mimir-distributed` in `chart/values.yaml`). Filesystem storage is never used in distributed mode: with per-component PVCs the compactor and store-gateway can't see the ingester's blocks, retention never runs, and the ingester disk fills until ingestion halts ([issue #22](https://github.com/nebari-dev/lgtm-pack/issues/22)).
+
+The Grafana datasource and OTel collector endpoints follow the mode automatically.
 
 ### Nebari Integration
 
