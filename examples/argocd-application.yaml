@@ -1,3 +1,9 @@
+# Two example Argo CD Applications — one per Mimir deployment mode.
+# Deploy ONE of them, not both: they are alternatives for the same release.
+#
+# Example 1: monolithic Mimir (default)
+# Single-binary Mimir StatefulSet with filesystem storage and 30d retention.
+# No Mimir-specific values are needed — this is the chart default.
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -15,13 +21,72 @@ spec:
     chart: nebari-lgtm-pack
     # Published via the central Nebari Helm repository (nebari-dev/helm-repository).
     repoURL: https://raw.githubusercontent.com/nebari-dev/helm-repository/gh-pages/
-    targetRevision: 0.1.3
+    targetRevision: 0.2.0
     helm:
       releaseName: lgtm-pack
       values: |
         nebariapp:
           hostname: grafana.example.com
           keycloakHostname: keycloak.example.com
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+
+  syncPolicy:
+    managedNamespaceMetadata:
+      labels:
+        nebari.dev/managed: "true"
+    automated:
+      prune: true
+      selfHeal: true
+      allowEmpty: false
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+---
+# Example 2: distributed Mimir (opt-in)
+# Horizontally scalable Mimir via the upstream mimir-distributed subchart,
+# backed by its bundled MinIO object store. Enabling it automatically
+# suppresses the monolithic StatefulSet and re-points the Grafana datasource
+# and OTel collector at the gateway.
+#
+# The bundled MinIO ships dev-grade defaults (static credentials, 5Gi PVC).
+# For production, override minio.rootUser / minio.rootPassword /
+# minio.persistence.size, or use a real cloud bucket instead — see the
+# commented s3 example under `mimir-distributed` in chart/values.yaml.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: lgtm-pack
+  namespace: argocd
+  labels:
+    app.kubernetes.io/part-of: nebari-packs
+    app.kubernetes.io/managed-by: nebari-infrastructure-core
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+
+  source:
+    chart: nebari-lgtm-pack
+    # Published via the central Nebari Helm repository (nebari-dev/helm-repository).
+    repoURL: https://raw.githubusercontent.com/nebari-dev/helm-repository/gh-pages/
+    targetRevision: 0.2.0
+    helm:
+      releaseName: lgtm-pack
+      values: |
+        nebariapp:
+          hostname: grafana.example.com
+          keycloakHostname: keycloak.example.com
+        mimir-distributed:
+          enabled: true
 
   destination:
     server: https://kubernetes.default.svc

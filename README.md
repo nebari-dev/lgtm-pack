@@ -58,10 +58,10 @@ Grafana will be available at port 80 of the `lgtm-pack-grafana` service (default
 
 ### Deploy as an ArgoCD Application
 
-On a GitOps-managed Nebari cluster, deploy the pack by applying an ArgoCD `Application` that sources the chart from the Nebari Helm repository. A complete, ready-to-edit manifest lives at [`examples/argocd-application.yaml`](examples/argocd-application.yaml):
+On a GitOps-managed Nebari cluster, deploy the pack by applying an ArgoCD `Application` that sources the chart from the Nebari Helm repository. Two complete, ready-to-edit manifests live at [`examples/argocd-application.yaml`](examples/argocd-application.yaml) — one for the default monolithic Mimir and one for the opt-in distributed mode. Copy the one you want into its own file (they are alternatives for the same release; applying the whole file would deploy only the last document) and apply it:
 
 ```bash
-kubectl apply -f examples/argocd-application.yaml
+kubectl apply -f my-lgtm-application.yaml
 ```
 
 Set `nebariapp.hostname` and `nebariapp.keycloakHostname` to your cluster's values before applying. The example pins `targetRevision` to a published chart version and opts the `monitoring` namespace into Nebari management (`nebari.dev/managed: "true"`) so the nebari-operator reconciles the bundled `NebariApp`.
