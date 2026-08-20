@@ -197,6 +197,25 @@ This is a soft dependency on the LGTM pack: if this pack (and therefore Grafana)
 
 To stop watching other namespaces, set `grafana.sidecar.dashboards.searchNamespace` to the release namespace (or a comma-separated list). Only this pack's own dashboards are then provisioned.
 
+## Documentation
+
+The docs site lives in [`docs/`](docs/) and is built with [Astro](https://astro.build) +
+[Starlight](https://starlight.astro.build) using the shared `@nebari/starlight` theme. It
+deploys to [packs.nebari.dev/lgtm-pack/](https://packs.nebari.dev/lgtm-pack/) on every merge
+to `main`; pull requests that touch `docs/` get a preview URL posted as a comment.
+
+```bash
+make docs           # dev server with hot reload at http://localhost:4321
+make docs-build     # static build into docs/dist/
+make docs-preview   # serve the production build locally
+make docs-test      # unit tests
+make docs-check-links
+```
+
+Pages live in `docs/src/content/docs/` — each `.md` or `.mdx` file becomes a page, and the
+sidebar is configured in `docs/astro.config.mjs`. See [`docs/README.md`](docs/README.md) for
+details.
+
 ## License
 
 Apache 2.0 — see [LICENSE](LICENSE).
