@@ -21,7 +21,7 @@ export default defineConfig({
   integrations: [
     starlight({
       title: 'Nebari LGTM Pack',
-      description: 'Observability stack (Grafana LGTM) for Nebari - Loki, Tempo, Mimir, and Grafana on a Nebari cluster.',
+      description: 'Cluster observability with the Grafana LGTM stack: Loki logs, Tempo traces, Mimir metrics, and Grafana dashboards.',
       // Shared Nebari identity (brand colors, fonts, logo, favicon, footer, and
       // GitHub social link) comes from the @nebari/starlight theme plugin. On the
       // portal the header logo returns users to the pack catalog.

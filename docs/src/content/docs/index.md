@@ -1,6 +1,6 @@
 ---
 title: Introduction
-description: Documentation for the Nebari LGTM Pack - the Grafana LGTM observability stack (Loki, Grafana, Tempo, Mimir) on a Nebari cluster.
+description: "Cluster observability with the Grafana LGTM stack: Loki logs, Tempo traces, Mimir metrics, and Grafana dashboards."
 ---
 
 The Nebari LGTM Pack deploys the Grafana **LGTM** observability stack — **L**oki
