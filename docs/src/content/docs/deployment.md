@@ -1,5 +1,5 @@
 ---
-title: Deploying with Argo CD
+title: Deploying on Nebari
 description: GitOps deployment of the Nebari LGTM Pack on a Nebari cluster.
 ---
 

@@ -60,7 +60,7 @@ dependencies — a pack that uses them works fine on a cluster where LGTM is not
 ## In this guide
 
 - **[Getting started](/getting-started/)** — install the chart and reach Grafana
-- **[Deploying with Argo CD](/deployment/)** — the GitOps path on a Nebari cluster
+- **[Deploying on Nebari](/deployment/)** — the GitOps path with Argo CD
 - **[Nebari integration](/nebari-integration/)** — hostname, Keycloak SSO, and the
   landing-page tile
 - **[Local development](/local-development/)** — k3d and Tilt on your laptop

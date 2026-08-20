@@ -32,7 +32,7 @@ kubectl label namespace monitoring nebari.dev/managed=true
 ```
 
 Under Argo CD, `syncPolicy.managedNamespaceMetadata` applies that label for you — see
-[Deploying with Argo CD](/deployment/).
+[Deploying on Nebari](/deployment/).
 
 ## What the `NebariApp` points at
 

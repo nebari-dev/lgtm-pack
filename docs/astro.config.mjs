@@ -37,7 +37,7 @@ export default defineConfig({
           items: [
             { label: 'Introduction', link: '/' },
             { label: 'Getting started', link: '/getting-started/' },
-            { label: 'Deploying with Argo CD', link: '/deployment/' },
+            { label: 'Deploying on Nebari', link: '/deployment/' },
             { label: 'Nebari integration', link: '/nebari-integration/' },
             { label: 'Local development', link: '/local-development/' },
           ],
