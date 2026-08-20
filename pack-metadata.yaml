@@ -87,10 +87,15 @@ product_owner: null
 #   Use the small-instance profile for demos. The large profile times out
 #   on cluster provisioning.
 
+# Whether this pack publishes its own docs site. When true, the dashboard's
+# route generator adds packs.nebari.dev/lgtm-pack/ -> https://lgtm-pack.pages.dev
+# (the Cloudflare Pages project must be named after the repo).
+docs_site: true
+
 # Links shown alongside the pack on the dashboard. Both are optional.
-# links:
-#   Extended documentation (NOT the README - that is auto-linked from the
-#   pack name column).
-#   docs: https://example.com/docs/my-pack
-#   Recorded or live demo URL.
-#   demo: https://example.com/demos/my-pack
+links:
+  # Extended documentation (NOT the README - that is auto-linked from the
+  # pack name column).
+  docs: https://packs.nebari.dev/lgtm-pack/
+  # Recorded or live demo URL.
+  # demo: https://example.com/demos/my-pack

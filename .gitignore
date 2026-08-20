@@ -13,3 +13,11 @@ charts/
 
 # Claude
 CLAUDE.md
+
+# Docs (Astro)
+docs/node_modules/
+docs/dist/
+docs/.astro/
+docs/npm-debug.log*
+docs/.env
+docs/.env.production
