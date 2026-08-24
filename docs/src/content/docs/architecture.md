@@ -51,11 +51,11 @@ instrumented services. Both land in the same Loki.
 
 Grafana is never configured by hand. Two sidecar-watched ConfigMaps do the work:
 
-- **`<release>-datasources`**, labeled `grafana_datasource: "1"`, defines Loki (uid `loki`,
+- **`<fullname>-datasources`**, labeled `grafana_datasource: "1"`, defines Loki (uid `loki`,
   set as default), Tempo (uid `tempo`), and — when any Mimir is enabled — Mimir (uid
   `mimir`). Tempo is configured with `tracesToLogsV2` pointing at the Loki uid, so a span
   links straight to its logs, and `nodeGraph` is on.
-- **`<release>-dashboards`**, labeled `grafana_dashboard: "1"` and annotated
+- **`<fullname>-dashboards`**, labeled `grafana_dashboard: "1"` and annotated
   `grafana_folder: "Nebari"`, carries every JSON file under the chart's `dashboards/`
   directory.
 
@@ -67,13 +67,38 @@ you rename the release or flip Mimir to distributed.
 
 | Component | Backend | Default size | Retention |
 |---|---|---|---|
-| Loki | filesystem, TSDB schema v13 | 10Gi | upstream default |
-| Tempo | local, `/var/tempo/traces` | 10Gi | upstream default |
+| Loki | filesystem, TSDB schema v13 | 10Gi | **none** — logs are kept forever |
+| Tempo | local, `/var/tempo/traces` | 10Gi | 24h (`tempo.retention`) |
 | Mimir monolithic | filesystem under `/data` | 20Gi | 30d (`mimir.retention`) |
 | Mimir distributed | object store (bundled MinIO or S3) | per-component 10Gi | 30d (`compactor_blocks_retention_period`) |
 
+Only Mimir has retention configured by this chart. The other two inherit upstream
+defaults, and both are worth knowing about:
+
+:::caution[Loki keeps logs until the disk is full]
+The rendered Loki config sets no retention — no compactor `retention_enabled`, and
+`tableManager.retention_period: 0`. Logs accumulate on the 10Gi PVC indefinitely, which
+is the same unbounded-growth failure mode described for distributed Mimir in
+[issue #22](https://github.com/nebari-dev/lgtm-pack/issues/22). Size the PVC for your log
+volume, or configure Loki's compactor retention:
+
+```yaml
+loki:
+  loki:
+    limits_config:
+      retention_period: 30d
+    compactor:
+      retention_enabled: true
+      delete_request_store: filesystem
+```
+:::
+
+Tempo goes the other way: the upstream chart's `tempo.retention: 24h` becomes
+`compactor.compaction.block_retention`, so traces older than a day are deleted. Raise
+`tempo.retention` if you need a longer window.
+
 Filesystem storage is valid for monolithic Mimir precisely because one process owns the
-one volume. It is *not* valid distributed — that distinction is the subject of
+one volume. It is *not* valid in distributed mode — that distinction is the subject of
 [Mimir deployment modes](/mimir-modes/).
 
 ## Monolithic Mimir

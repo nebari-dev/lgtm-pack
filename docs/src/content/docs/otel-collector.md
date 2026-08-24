@@ -56,8 +56,11 @@ override follows the [Mimir deployment mode](/mimir-modes/) automatically —
 
 The metrics pipeline keeps the `prometheus` receiver alongside `otlp`, which is how
 kube-state-metrics and node-exporter reach Mimir: both subcharts set
-`prometheus.io/scrape` pod annotations, and the collector's scrape job discovers them via
-`role: pod`.
+`prometheus.io/scrape` pod annotations, and the collector's `kubernetes-pods` job
+discovers them via `role: pod`. Two further jobs in NIC's base config —
+`kubernetes-cadvisor` and `kubernetes-kubelet`, both scraped through the apiserver proxy —
+feed the same pipeline, and the *Pods* and *Namespaces* Kubernetes views depend on the
+`container_*` series they produce.
 
 ## Why a separate ConfigMap
 
@@ -125,9 +128,12 @@ kubectl -n monitoring rollout restart daemonset opentelemetry-collector-agent
 # Did the override land?
 kubectl -n monitoring get cm opentelemetry-collector-overrides -o yaml
 
-# Did the rollout hook succeed?
-kubectl -n monitoring get jobs -l app.kubernetes.io/component=otel-rollout
-kubectl -n monitoring logs job/lgtm-pack-otel-rollout
+# Did the rollout hook run? The label lives on the Job's pod template, not
+# on the Job itself, so select pods. Note the Job carries
+# hook-delete-policy: hook-succeeded — Helm deletes it as soon as it
+# succeeds, so finding nothing here is the normal healthy state.
+kubectl -n monitoring get pods -l app.kubernetes.io/component=otel-rollout
+kubectl -n monitoring logs job/lgtm-pack-nebari-lgtm-pack-otel-rollout
 
 # Is the collector actually exporting, or still on debug?
 kubectl -n monitoring logs ds/opentelemetry-collector-agent | grep -i exporter

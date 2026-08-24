@@ -39,7 +39,7 @@ its PVC are not visible to a distributed install reading from an object store, a
 versa. Treat a mode change as starting a fresh metrics store.
 :::
 
-## Why filesystem storage is invalid distributed
+## Why filesystem storage is invalid in distributed mode
 
 This is the trap that motivated the current defaults
 ([issue #22](https://github.com/nebari-dev/lgtm-pack/issues/22)).

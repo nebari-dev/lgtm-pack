@@ -12,9 +12,9 @@ subchart's own documentation.
 | Key | Chart | Version | Upstream values |
 |---|---|---|---|
 | `grafana.*` | grafana | 10.5.15 | [values](https://github.com/grafana/helm-charts/tree/main/charts/grafana) |
-| `loki.*` | loki | 6.53.0 | [values](https://github.com/grafana/helm-charts/tree/main/charts/loki) |
+| `loki.*` | loki | 6.53.0 | [values](https://github.com/grafana/loki/tree/main/production/helm/loki) |
 | `tempo.*` | tempo | 1.24.4 | [values](https://github.com/grafana/helm-charts/tree/main/charts/tempo) |
-| `mimir-distributed.*` | mimir-distributed | 6.0.5 | [values](https://github.com/grafana/helm-charts/tree/main/charts/mimir-distributed) |
+| `mimir-distributed.*` | mimir-distributed | 6.0.5 | [values](https://github.com/grafana/mimir/tree/main/operations/helm/charts/mimir-distributed) |
 | `promtail.*` | promtail | 6.17.1 | [values](https://github.com/grafana/helm-charts/tree/main/charts/promtail) |
 | `kube-state-metrics.*` | kube-state-metrics | 7.1.0 | [values](https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-state-metrics) |
 | `prometheus-node-exporter.*` | prometheus-node-exporter | 4.51.1 | [values](https://github.com/prometheus-community/helm-charts/tree/main/charts/prometheus-node-exporter) |
@@ -108,8 +108,10 @@ container labels.
 ### kube-state-metrics and prometheus-node-exporter
 
 Both carry `prometheus.io/scrape: "true"` pod annotations (ports 8080 and 9100
-respectively) so the OTel collector's `role: pod` discovery finds them. The Kubernetes
-Views dashboards depend on both.
+respectively) so the `role: pod` discovery in NIC's OTel collector finds them. This chart
+deploys the exporters but no scraper, so without that collector nothing pulls them into
+Mimir. The Kubernetes Views dashboards additionally need the collector's cAdvisor and
+kubelet scrape jobs — see [Dashboards](/dashboards/#what-they-need-to-show-data).
 
 ## Common overrides
 

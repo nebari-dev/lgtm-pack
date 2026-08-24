@@ -78,6 +78,18 @@ so without this the `NebariApp` is created and then ignored — Grafana never ge
 **`CreateNamespace=true`** is what makes `managedNamespaceMetadata` take effect; together
 they are how the namespace gets created *and* opted in without a separate manifest.
 
+:::caution[`managedNamespaceMetadata` only labels a namespace its own Application creates]
+If `monitoring` already exists, this Application will not add the label to it. On a NIC
+cluster that is normally fine — NIC's own `opentelemetry-collector` Application (sync-wave
+4) creates `monitoring` and applies `nebari.dev/managed: "true"` for exactly this reason,
+so the label is already there and the block above is belt-and-braces. But if you deploy
+into some *other* pre-existing namespace, label it yourself:
+
+```bash
+kubectl label namespace <ns> nebari.dev/managed=true
+```
+:::
+
 **`ServerSideApply=true`** matters because the Grafana subchart renders large dashboard
 ConfigMaps. Client-side apply stores the full resource in the
 `last-applied-configuration` annotation and can exceed the 256KB annotation limit.

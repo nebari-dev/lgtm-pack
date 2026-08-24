@@ -15,13 +15,38 @@ Grafana comes up with two folders already populated.
 | Kubernetes | Kubernetes / Views / Pods | grafana.com ID 15760 |
 | Nebari | Nebari Gateway Traffic | `chart/dashboards/nebari-gateway-traffic.json` |
 
-The Kubernetes views are downloaded by the grafana subchart at render time and pinned to
-specific revisions, with `DS_PROMETHEUS` bound to the Mimir datasource. They depend on
-kube-state-metrics and prometheus-node-exporter, both of which this chart deploys.
+The Kubernetes views are pinned to specific revisions with `DS_PROMETHEUS` bound to the
+Mimir datasource, but they are not baked into the release: the grafana subchart renders an
+empty `<release>-grafana-dashboards-kubernetes` ConfigMap and a `download-dashboards` init
+container fetches each one from `grafana.com/api/dashboards/<id>/revisions/<rev>/download`
+at pod startup.
+
+:::caution[The Kubernetes views need egress to grafana.com]
+On an air-gapped cluster, or one with restrictive egress policy, the init container cannot
+reach grafana.com and the four Kubernetes views are simply absent. Only *Nebari Gateway
+Traffic*, which ships as JSON in the chart, is guaranteed offline.
+:::
 
 *Nebari Gateway Traffic* charts the Envoy Gateway data plane: request rate by response
 code, active connections, total requests, request duration, bytes in/out, and certificate
 expiry in days remaining.
+
+### What they need to show data
+
+The Kubernetes views draw on three metric sources, and this chart deploys only the first
+two:
+
+- **kube-state-metrics** — Kubernetes object state (pod phase, resource requests/limits).
+- **prometheus-node-exporter** — node CPU, memory, disk, network.
+- **cAdvisor and kubelet `/metrics`** — per-container `container_cpu_*` /
+  `container_memory_*` series, which the *Pods* and *Namespaces* views depend on. These
+  come from scrape jobs in NIC's OpenTelemetry collector, not from this chart.
+
+Nothing in this pack scrapes anything. The `prometheus.io/scrape` annotations on
+kube-state-metrics and node-exporter are read by NIC's collector via its `kubernetes-pods`
+job — so on a standalone install with `otelCollectorOverrides.enabled: false` and no NIC
+collector, the Kubernetes folder is provisioned but every panel in it is empty until you
+point a scraper at Mimir. See [OpenTelemetry wiring](/otel-collector/).
 
 ## Provisioned datasources
 
@@ -33,9 +58,9 @@ Dashboards reference datasources by `uid`, not by name:
 | `tempo` | tempo | Traces, with `tracesToLogsV2` linking to `loki` |
 | `mimir` | prometheus | Metrics — present only when a Mimir mode is enabled |
 
-A panel pointing at a uid that does not exist renders empty rather than erroring, so a
-dashboard that assumes `mimir` will silently show nothing on an install with both Mimir
-modes disabled.
+A panel pointing at a uid that does not exist fails to resolve its datasource, so a
+dashboard that assumes `mimir` shows panel errors rather than data on an install with both
+Mimir modes disabled.
 
 ## Contributing a dashboard from another pack
 

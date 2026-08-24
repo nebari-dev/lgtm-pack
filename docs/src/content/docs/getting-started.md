@@ -8,7 +8,10 @@ description: Install the Nebari LGTM Pack on a Kubernetes cluster and reach Graf
 - A Kubernetes cluster. For a laptop, [k3d](https://k3d.io) is enough — see
   [Local development](/local-development/).
 - [Helm](https://helm.sh) 3+.
-- A default StorageClass. Loki, Tempo, and Mimir each claim a PVC.
+- A default StorageClass. Loki, Tempo, and Mimir each claim a PVC. Grafana's own
+  persistence is off by default, so its local users, preferences, and any UI-created
+  dashboards are lost when the pod restarts — turn on `grafana.persistence` if that
+  matters (provisioned datasources and dashboards are unaffected).
 - For Nebari integration only: the
   [nebari-operator](https://github.com/nebari-dev/nebari-operator) (it provides the
   `NebariApp` CRD) and a Keycloak realm.
@@ -49,10 +52,18 @@ fails to render without it. See [Nebari integration](/nebari-integration/).
 | `lgtm-pack-promtail` | DaemonSet | Ships container logs to Loki |
 | `lgtm-pack-kube-state-metrics` | Deployment | Kubernetes object metrics |
 | `lgtm-pack-prometheus-node-exporter` | DaemonSet | Node CPU, memory, disk, network |
+| `loki-canary` | DaemonSet | Loki's own write/read self-test (upstream default) |
 
-Resource names follow the Helm release name, so a release named `obs` produces
+Most resources are named after the Helm release, so a release named `obs` produces
 `obs-grafana`, `obs-loki`, and so on. Every endpoint this chart templates uses
-`.Release.Name`, so custom release names work throughout.
+`.Release.Name`, so custom release names work throughout. Two exceptions are worth
+knowing when you go looking for something:
+
+- Some loki and tempo subchart resources are *not* release-prefixed — `loki-canary`,
+  `loki-headless`, and the `loki`, `loki-runtime`, and `tempo` ConfigMaps.
+- Resources this chart templates itself use Helm's fullname helper, which yields
+  `<release>-nebari-lgtm-pack-*` (for example `lgtm-pack-nebari-lgtm-pack-datasources`)
+  unless the release name already contains `nebari-lgtm-pack`.
 
 ## Reach Grafana
 
@@ -76,8 +87,11 @@ logins go through the realm — see [Nebari integration](/nebari-integration/).
 # Everything should be Running / Ready
 kubectl -n monitoring get pods
 
-# The three datasources Grafana provisions from the sidecar ConfigMap
-kubectl -n monitoring get cm lgtm-pack-datasources -o yaml
+# The three datasources Grafana provisions from the sidecar ConfigMap.
+# Chart-templated resources are named <release>-nebari-lgtm-pack-*, because
+# Helm's fullname helper only collapses when the release name already
+# contains the chart name.
+kubectl -n monitoring get cm lgtm-pack-nebari-lgtm-pack-datasources -o yaml
 
 # Mimir reports ready once its single process has started every target
 kubectl -n monitoring exec sts/lgtm-pack-mimir -- wget -qO- localhost:8080/ready
@@ -86,6 +100,12 @@ kubectl -n monitoring exec sts/lgtm-pack-mimir -- wget -qO- localhost:8080/ready
 In Grafana, **Connections → Data sources** should list Loki (default), Tempo, and Mimir,
 and **Dashboards** should show a `Kubernetes` folder with four views plus a `Nebari` folder
 containing *Nebari Gateway Traffic*.
+
+Expect the dashboards to be empty at this point. This pack ships no metrics scraper of its
+own — the `Kubernetes` views need something to pull kube-state-metrics, node-exporter, and
+cAdvisor into Mimir, which on a Nebari cluster is NIC's OpenTelemetry collector. Logs are
+the exception: Promtail is already shipping them, so **Explore → Loki** has data
+immediately. See [Dashboards](/dashboards/#what-they-need-to-show-data).
 
 ## Send it some telemetry
 

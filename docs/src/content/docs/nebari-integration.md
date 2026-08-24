@@ -171,10 +171,10 @@ query it. Put authentication in front of any route you expose beyond the cluster
 
 ```bash
 kubectl -n monitoring get nebariapp
-kubectl -n monitoring describe nebariapp lgtm-pack
+kubectl -n monitoring describe nebariapp lgtm-pack-nebari-lgtm-pack
 
 # The operator writes the client secret here once the Keycloak client exists
-kubectl -n monitoring get secret lgtm-pack-oidc-client
+kubectl -n monitoring get secret lgtm-pack-nebari-lgtm-pack-oidc-client
 
 # What Grafana actually received
 kubectl -n monitoring get cm grafana-oauth-config -o yaml
