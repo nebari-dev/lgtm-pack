@@ -26,10 +26,36 @@ export default defineConfig({
       // GitHub social link) comes from the @nebari/starlight theme plugin. On the
       // portal the header logo returns users to the pack catalog.
       plugins: [nebari({ logoHref: 'https://packs.nebari.dev/' })],
+      editLink: {
+        // Starlight appends the source path (src/content/docs/<file>.md) to this
+        // base, so it must point at the Astro project root inside the repo.
+        baseUrl: 'https://github.com/nebari-dev/lgtm-pack/edit/main/docs/',
+      },
       sidebar: [
         {
           label: 'Getting Started',
-          items: [{ label: 'Introduction', link: '/' }],
+          items: [
+            { label: 'Introduction', link: '/' },
+            { label: 'Getting started', link: '/getting-started/' },
+            { label: 'Deploying on Nebari', link: '/deployment/' },
+            { label: 'Nebari integration', link: '/nebari-integration/' },
+            { label: 'Local development', link: '/local-development/' },
+          ],
+        },
+        {
+          label: 'Guides',
+          items: [
+            { label: 'Mimir deployment modes', link: '/mimir-modes/' },
+            { label: 'OpenTelemetry wiring', link: '/otel-collector/' },
+            { label: 'Dashboards', link: '/dashboards/' },
+          ],
+        },
+        {
+          label: 'Reference',
+          items: [
+            { label: 'Configuration', link: '/configuration/' },
+            { label: 'Architecture', link: '/architecture/' },
+          ],
         },
       ],
     }),
