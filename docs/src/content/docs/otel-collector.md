@@ -25,7 +25,8 @@ This is on by default (`otelCollectorOverrides.enabled: true`).
    `[otlp/tempo]`, and `[otlphttp/mimir]`. They set nothing else: the merge replaces lists
    rather than appending to them, so the receivers and processors (including the
    `k8sattributes` processor that adds `k8s.*` resource attributes) come from NIC's config
-   untouched.
+   untouched. This depends on NIC's base config defining all three pipelines with their
+   receivers and processors, which it does today.
 4. A post-install/post-upgrade Job rolls NIC's collector DaemonSet so the init container
    re-resolves the file.
 

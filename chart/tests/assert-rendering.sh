@@ -73,11 +73,13 @@ assert_contains DIST_OUT 'endpoint: http://test-mimir-gateway.default.svc.cluste
 # The collector replaces lists when merging --config files, so restating
 # processors or receivers here would clobber NIC's rendered lists (and drop
 # the k8sattributes processor its kubernetesAttributes preset injects).
-OVERRIDE_RELAY="$(yq 'select(.kind == "ConfigMap" and .metadata.name == "opentelemetry-collector-overrides") | .data."relay.yaml"' <<<"$DEFAULT_OUT")"
-[ -n "$OVERRIDE_RELAY" ] || fail "opentelemetry-collector-overrides ConfigMap must render relay.yaml"
-for pipeline in logs traces metrics; do
-  keys="$(yq ".service.pipelines.${pipeline} | keys | join(\",\")" <<<"$OVERRIDE_RELAY")"
-  [ "$keys" = "exporters" ] || fail "override pipeline ${pipeline} must set only exporters, got [${keys}] (issue #30)"
+for mode_out in DEFAULT_OUT DIST_OUT; do
+  OVERRIDE_RELAY="$(yq 'select(.kind == "ConfigMap" and .metadata.name == "opentelemetry-collector-overrides") | .data."relay.yaml"' <<<"${!mode_out}")"
+  [ -n "$OVERRIDE_RELAY" ] || fail "${mode_out}: opentelemetry-collector-overrides ConfigMap must render relay.yaml"
+  for pipeline in logs traces metrics; do
+    keys="$(yq ".service.pipelines.${pipeline} | keys | join(\",\")" <<<"$OVERRIDE_RELAY")"
+    [ "$keys" = "exporters" ] || fail "${mode_out}: override pipeline ${pipeline} must set only exporters, got [${keys}] (issue #30)"
+  done
 done
 
 echo "== rendering with all Mimir disabled =="
