@@ -10,7 +10,10 @@
 # when merging --config files, so restating receivers or processors would
 # clobber NIC's rendered lists, including the k8sattributes processor its
 # kubernetesAttributes preset prepends at render time (issue #30). Keys
-# omitted here survive the map merge from NIC's base config.
+# omitted here survive the map merge from NIC's base config. This relies on
+# NIC's base config defining the logs, traces, and metrics pipelines with
+# their receivers and processors; a pipeline that exists only here would have
+# no receivers and the collector would refuse to start.
 #
 # This approach replaces a previous design that tried to in-place patch NIC's
 # chart-rendered ConfigMap with ArgoCD ignoreDifferences. That approach hit
