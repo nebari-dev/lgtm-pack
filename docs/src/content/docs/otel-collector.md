@@ -22,7 +22,10 @@ This is on by default (`otelCollectorOverrides.enabled: true`).
    in a different namespace than the LGTM release.
 3. The collector deep-merges NIC's base config with the override at startup. The override's
    pipelines replace the base `[debug]` exporter lists with `[otlphttp/loki]`,
-   `[otlp/tempo]`, and `[otlphttp/mimir]`.
+   `[otlp/tempo]`, and `[otlphttp/mimir]`. They set nothing else: the merge replaces lists
+   rather than appending to them, so the receivers and processors (including the
+   `k8sattributes` processor that adds `k8s.*` resource attributes) come from NIC's config
+   untouched.
 4. A post-install/post-upgrade Job rolls NIC's collector DaemonSet so the init container
    re-resolves the file.
 
@@ -45,16 +48,16 @@ exporters:
     tls: { insecure: true }
 service:
   pipelines:
-    logs:    { receivers: [otlp], processors: [memory_limiter, batch], exporters: [otlphttp/loki] }
-    traces:  { receivers: [otlp], processors: [memory_limiter, batch], exporters: [otlp/tempo] }
-    metrics: { receivers: [otlp, prometheus], processors: [memory_limiter, batch], exporters: [otlphttp/mimir] }
+    logs:    { exporters: [otlphttp/loki] }
+    traces:  { exporters: [otlp/tempo] }
+    metrics: { exporters: [otlphttp/mimir] }
 ```
 
 The Mimir host and port come from the same helpers the Grafana datasource uses, so the
 override follows the [Mimir deployment mode](/mimir-modes/) automatically —
 `<release>-mimir:8080` monolithic, `<release>-mimir-gateway:80` distributed.
 
-The metrics pipeline keeps the `prometheus` receiver alongside `otlp`, which is how
+The metrics pipeline inherits NIC's `prometheus` receiver alongside `otlp`, which is how
 kube-state-metrics and node-exporter reach Mimir: both subcharts set
 `prometheus.io/scrape` pod annotations, and the collector's `kubernetes-pods` job
 discovers them via `role: pod`. Two further jobs in NIC's base config —
