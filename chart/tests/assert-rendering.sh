@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 # Template-rendering assertions for both Mimir modes (monolithic default,
-# distributed opt-in). Pure `helm template` — no cluster required.
-# Prerequisite: helm dependency update chart
+# distributed opt-in). Uses `helm template` and `yq`, no cluster required.
+# Prerequisites: helm dependency update chart; mikefarah yq v4 on PATH
 set -euo pipefail
+
+command -v yq >/dev/null || { echo "yq (mikefarah v4) is required: https://github.com/mikefarah/yq" >&2; exit 1; }
 
 CHART="$(cd "$(dirname "$0")/.." && pwd)"
 
