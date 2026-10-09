@@ -50,6 +50,10 @@ assert_not_contains DIST_OUT 'serviceName: test-mimir$' \
 # --- Distributed mode: shared object store, no filesystem "buckets" ---
 assert_contains DIST_OUT 'name: test-minio' \
   "distributed mode must deploy the bundled MinIO"
+assert_not_contains DIST_OUT 'image: "\?quay.io/minio/' \
+  "bundled MinIO must not use quay.io/minio images (no longer publicly pullable)"
+assert_contains DIST_OUT 'image: "\?pgsty/silo:' \
+  "bundled MinIO must use the pgsty/silo image"
 assert_contains DIST_OUT 'bucket_name: mimir-tsdb' \
   "distributed blocks storage must point at the MinIO bucket"
 assert_not_contains DIST_OUT 'dir: /data/mimir-blocks' \
