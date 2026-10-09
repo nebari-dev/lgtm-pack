@@ -9,6 +9,7 @@ description: Run the full LGTM stack on your laptop with k3d and Tilt.
 - [ctlptl](https://github.com/tilt-dev/ctlptl) — creates and deletes the k3d cluster
 - [Tilt](https://docs.tilt.dev/install.html) — the dev loop
 - [Helm](https://helm.sh) 3+
+- [yq](https://github.com/mikefarah/yq) v4 (mikefarah), used by `chart/tests/assert-rendering.sh`
 
 ## Up and down
 

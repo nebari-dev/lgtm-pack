@@ -455,6 +455,9 @@ prometheus-node-exporter:
 # hit upstream ArgoCD bug argoproj/argo-cd#7478 (apply step writes the full
 # rendered resource on every sync regardless of ignoreDifferences).
 #
+# The override's pipelines set only exporters: the collector replaces lists
+# when merging, so restating receivers or processors would drop NIC's (issue #30).
+#
 # Set enabled=false in environments where NIC is not deploying the collector
 # (e.g. standalone LGTM installs against a user-managed collector).
 otelCollectorOverrides:
