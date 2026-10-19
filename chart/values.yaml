@@ -350,6 +350,17 @@ mimir-distributed:
   #         bucket_name: my-mimir-ruler
   minio:
     enabled: true
+    # MinIO no longer publishes public images (quay.io/minio/* and Docker Hub
+    # minio/* both require auth), so the subchart's defaults fail with
+    # ImagePullBackOff. Use pgsty/silo, a maintained MinIO fork with the same
+    # S3 API that bundles both the server and the mc client. Same override
+    # upstream ships in mimir-distributed 6.2.1; drop it when bumping to that.
+    image:
+      repository: pgsty/silo
+      tag: RELEASE.2026-09-03T13-18-01Z
+    mcImage:
+      repository: pgsty/silo
+      tag: RELEASE.2026-09-03T13-18-01Z
   # Lightweight config for local development — single replicas, no Kafka
   mimir:
     structuredConfig:

@@ -65,6 +65,10 @@ compaction, retention, and querying all see the same blocks.
 `mimir-distributed.minio.enabled` defaults to `true`. The upstream chart auto-wires
 blocks, ruler, and alertmanager storage of every component to it.
 
+MinIO no longer publishes public container images, so the chart runs the bundled store
+on `pgsty/silo`, a maintained MinIO fork with the same S3 API. The `minio.*` settings
+below apply to it unchanged.
+
 :::caution[MinIO defaults are development-grade]
 Static credentials rendered into the Mimir config ConfigMap, and a 5Gi PVC. For anything
 beyond a test cluster, override `minio.rootUser`, `minio.rootPassword`, and
